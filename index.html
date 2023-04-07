@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  </meta>
+  <link rel="stylesheet" href="css/leaflet.css" />
+  <title>North pole projection</title>
+
+  <!-- Load required libraries -->
+  <script src="js/jquery.js"></script>
+  <script src="js/leaflet.js"></script>
+  <script src="js/proj4.js"></script>
+  <script src="js/proj4leaflet.js"></script>
+  <script src="js/leaflet-kmz-src.js"></script>
+
+
+  <style>
+    body {
+      padding: 0px;
+      margin: 0px;
+    }
+
+    #xmap {
+      width: 80%;
+      height: 75vh;
+    }
+
+    #map-canvas2 {
+      width: 75%;
+      height: 350px;
+      margin-bottom: 1em;
+    }
+
+    #mix {
+      width: 75%;
+      height: 350px;
+      margin-bottom: 1em;
+    }
+
+    .legend {
+      background-color: white;
+      padding: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .legend div {
+      margin: 5px;
+    }
+
+    .legend img {
+      width: 15x;
+      height: 15px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="map-canvas2"></div>
+
+
+
+
+  <script>
+
+
+  $(document).ready(function () {
+    // Define the tile details for your two maps
+    var openTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.opentopomap.org/about">OpenTopoMap</a>'
+    });
+
+    var arcticMap = L.tileLayer('http://{s}.tiles.arcticconnect.ca/osm_3575/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
+    });
+
+    // Define the Arctic map bounds
+    var arcticBounds = L.latLngBounds(L.latLng(70, -180), L.latLng(90, 180));
+
+    // Create the map
+    var map = L.map('map-canvas2', {
+      layers: [openTopoMap],
+      zoomControl: false
+    }).setView([80, -135], 1);
+
+    // Add the basemap switcher control
+    var basemaps = {
+      'OpenTopoMap': openTopoMap,
+      'Arctic Map': arcticMap
+    };
+
+    L.control.layers(basemaps).addTo(map);
+
+    // Create a marker at the northwest corner of the Arctic bounds
+  var marker = L.marker([82,9]).addTo(map);
+
+
+    function switchToArcticMap() {
+      var zoom = map.getZoom();
+      var center = map.getCenter();
+      if (zoom >= 5 && arcticBounds.contains(center)) {
+        map.removeLayer(openTopoMap);
+        map.addLayer(arcticMap);
+        map.setView([0, -20], 3);
+        map.off('moveend', switchToArcticMap);
+        map.on('moveend', switchToOpenTopoMap);
+      }
+    }
+
+    function switchToOpenTopoMap() {
+      var zoom = map.getZoom();
+      if (zoom <= 0) {
+        map.removeLayer(arcticMap);
+        map.addLayer(openTopoMap);
+        map.setView([80, 0], 2);
+        map.off('moveend', switchToOpenTopoMap);
+        map.on('moveend', switchToArcticMap);
+      }
+    }
+
+    map.on('moveend', switchToArcticMap);
+    map.addLayer(openTopoMap);
+
+
+  });
+
+  </script>
+
+
+</body>
+
+</html>
